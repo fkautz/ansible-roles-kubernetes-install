@@ -1,0 +1,37 @@
+---
+- name: Add repository
+  yum_repository:
+    name: kubernetes
+    description: Kubernetes YUM Repo
+    file: kubernetes
+    baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+    gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+    gpgcheck: 1
+    enabled: true
+  become: true
+- name: Install kubernetes components
+  yum: 'name={{item}} state=present update_cache=yes'
+  with_items:
+    - kubelet-{{kubernetes_version}}
+    - kubeadm-{{kubernetes_version}}
+    - kubectl-{{kubernetes_version}}
+    - kubernetes-cni
+  become: true
+- name: Fix kubelet CGROUP_ARGS
+  replace:
+    path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+    regexp: .*KUBELET_CGROUP_ARGS=.*
+    replace: Environment="KUBELET_CGROUP_ARGS=--cgroup-driver=systemd --runtime-cgroups=/systemd/system.slice --kubelet-cgroups=/systemd/system.slice"
+  backup: yes
+  become: true
+- name: Disable IPV6
+  shell: sysctl -w net.ipv6.conf.all.disable_ipv6=1 && sysctl -w net.ipv6.conf.default.disable_ipv6=1
+  become: true
+- name: Enable kubelet service
+  systemd:
+    name: kubelet
+    enabled: true
+    masked: false
+  become: true
+- shell: echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables
+  become: true
