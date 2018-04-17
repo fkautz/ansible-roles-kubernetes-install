@@ -1,4 +1,12 @@
 ---
+- name: Set up br_netfilter
+  shell: modprobe br_netfilter
+  become: true
+  creates: /proc/sys/net/bridge/bridge-nf-call-iptables
+- name: Add br_netfilter to module autoload
+  shell: echo br_netfilter > /etc/modules-load.d/br_netfilter.conf
+  become: true
+  creates: /etc/modules-load.d/br_netfilter.conf
 - name: Add repository
   yum_repository:
     name: kubernetes
