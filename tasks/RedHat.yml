@@ -1,12 +1,15 @@
 ---
 - name: Set up br_netfilter
-  shell: modprobe br_netfilter
+  modprobe:
+    name: br_netfilter
+    state: present
   become: true
-  creates: /proc/sys/net/bridge/bridge-nf-call-iptables
 - name: Add br_netfilter to module autoload
-  shell: echo br_netfilter > /etc/modules-load.d/br_netfilter.conf
+  lineinfile:
+    path: /etc/modules-load.d/br_netfilter.conf
+    line: 'br_netfilter'
+    create: true
   become: true
-  creates: /etc/modules-load.d/br_netfilter.conf
 - name: Add repository
   yum_repository:
     name: kubernetes
@@ -30,16 +33,25 @@
     path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
     regexp: .*KUBELET_CGROUP_ARGS=.*
     replace: Environment="KUBELET_CGROUP_ARGS=--cgroup-driver=systemd --runtime-cgroups=/systemd/system.slice --kubelet-cgroups=/systemd/system.slice"
-  backup: yes
   become: true
-- name: Disable IPV6
-  shell: sysctl -w net.ipv6.conf.all.disable_ipv6=1 && sysctl -w net.ipv6.conf.default.disable_ipv6=1
+- name: Disable net.ipv6.conf.all.disable_ipv6
+  sysctl:
+    name: net.ipv6.conf.all.disable_ipv6
+    value: 1
+  become: true
+- name: Disable net.ipv6.conf.default.disable_ipv6
+  sysctl:
+    name: net.ipv6.conf.default.disable_ipv6
+    value: 1
+  become: true
+- name: Enable net.bridge.bridge-nf-call-iptables
+  sysctl:
+    path: net.bridge.bridge-nf-call-iptables
+    value: 1
   become: true
 - name: Enable kubelet service
   systemd:
     name: kubelet
     enabled: true
     masked: false
-  become: true
-- shell: echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables
   become: true
