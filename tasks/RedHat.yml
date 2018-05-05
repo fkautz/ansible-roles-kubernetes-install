@@ -46,7 +46,7 @@
   become: true
 - name: Enable net.bridge.bridge-nf-call-iptables
   sysctl:
-    path: net.bridge.bridge-nf-call-iptables
+    name: net.bridge.bridge-nf-call-iptables
     value: 1
   become: true
 - name: Enable kubelet service
