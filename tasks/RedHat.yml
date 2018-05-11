@@ -32,7 +32,7 @@
   replace:
     path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
     regexp: .*KUBELET_CGROUP_ARGS=.*
-    replace: Environment="KUBELET_CGROUP_ARGS=--cgroup-driver=systemd --runtime-cgroups=/systemd/system.slice --kubelet-cgroups=/systemd/system.slice"
+    replace: Environment="KUBELET_CGROUP_ARGS=--cgroup-driver=cgroupfs --runtime-cgroups=/systemd/system.slice --kubelet-cgroups=/systemd/system.slice"
   become: true
 - name: Disable net.ipv6.conf.all.disable_ipv6
   sysctl:
